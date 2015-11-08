@@ -10,25 +10,25 @@
 
 using namespace std;
 
-const int amountChromosones = 32;               //The amount of chromosones. Should be even number
-string chromosone[amountChromosones];           //9 sections of 4 bits each - each section is a number or operator
-double chromosoneFitness[amountChromosones];    //The fitness of the chromosones
+const int amountchromosomes = 32;               //The amount of chromosomes. Should be even number
+string chromosome[amountchromosomes];           //9 sections of 4 bits each - each section is a number or operator
+double chromosomeFitness[amountchromosomes];    //The fitness of the chromosomes
 
 int generationCount = 0;
 
 double desiredValue;                                //The desired result
-const double crossoverRate = 0.7;                   //The chance that the chromosones will exchange bits
+const double crossoverRate = 0.7;                   //The chance that the chromosomes will exchange bits
 const double mutationRate = 0.01;                   //The chance that a random bit gets flipped (1->0 or 0->1)
 const int geneLenght = 9;                           //The amount of genes. Should be an odd number
-const int chromosoneLenght = geneLenght*4;          //The total chromosone lenght
+const int chromosomeLenght = geneLenght*4;          //The total chromosome lenght
 
-void createChromosones();                                               //Create new chromosones if needed
-void calculateFitness(int chromosoneId);                                //Calculate the fitness score of the chromosone
-string decodeChromosone(int chromosoneId);                              //Decode the chromosone into the expression
-string cleanupChromosone(string decodedChromosone);                     //Cleanup the chromosone expression. Uses mostly the same code as the expression parser, just without adding the numbers together.
-string rouletteChromosone(double totalFitness);                         //Select chromosones to go through to the next generation. Chromosones that are not selected are empty
-void crossoverChromosones(string &chromosoneId1, string &chromosoneId2);//Chance for some chromosones to swap bits with other chromosones
-void mutateChromosone(string &chromosone);                              //Chance to mutate some bits in a chromosone
+void createchromosomes();                                               //Create new chromosomes if needed
+void calculateFitness(int chromosomeId);                                //Calculate the fitness score of the chromosome
+string decodechromosome(int chromosomeId);                              //Decode the chromosome into the expression
+string cleanupchromosome(string decodedchromosome);                     //Cleanup the chromosome expression. Uses mostly the same code as the expression parser, just without adding the numbers together.
+string roulettechromosome(double totalFitness);                         //Select chromosomes to go through to the next generation. chromosomes that are not selected are empty
+void crossoverchromosomes(string &chromosomeId1, string &chromosomeId2);//Chance for some chromosomes to swap bits with other chromosomes
+void mutatechromosome(string &chromosome);                              //Chance to mutate some bits in a chromosome
 
 bool done = false;
 
@@ -40,23 +40,23 @@ int main(){
     cout << "Please input a desired number to solve" << endl;
     cin >> desiredValue;
 
-    createChromosones();
+    createchromosomes();
 
     while(!done){
         totalFitness = 0;
 
-        for(int i = 0; i < amountChromosones; i++){
+        for(int i = 0; i < amountchromosomes; i++){
             calculateFitness(i);
-            totalFitness += chromosoneFitness[i];
+            totalFitness += chromosomeFitness[i];
         }
 
-        for(int i = 0; i < amountChromosones; i++){
-            if(chromosoneFitness[i] == 1){
+        for(int i = 0; i < amountchromosomes; i++){
+            if(chromosomeFitness[i] == 1){
             cout << "\nSolution found in " << generationCount << " generations!" << endl << endl;
-            cout << "Chromosone: " << chromosone[i] << endl;
-            string decoded = decodeChromosone(i);
+            cout << "chromosome: " << chromosome[i] << endl;
+            string decoded = decodechromosome(i);
             cout << "Decoded: " << decoded << endl;
-            cout << "Cleaned: " << cleanupChromosone(decoded) << endl;
+            cout << "Cleaned: " << cleanupchromosome(decoded) << endl;
 
             done = true;
             break;
@@ -64,44 +64,44 @@ int main(){
         }
 
         //define some temporary storage for the new population we are about to create
-        string temp[amountChromosones];
-        int chromosoneCount = 0;
+        string temp[amountchromosomes];
+        int chromosomeCount = 0;
         //loop until we have created POP_SIZE new chromosomes
-        while (chromosoneCount < amountChromosones){
+        while (chromosomeCount < amountchromosomes){
             // we are going to create the new population by grabbing members of the old population
             // two at a time via roulette wheel selection.
-            string offspring1 = rouletteChromosone(totalFitness);
-            string offspring2 = rouletteChromosone(totalFitness);
+            string offspring1 = roulettechromosome(totalFitness);
+            string offspring2 = roulettechromosome(totalFitness);
 
             //add crossover dependent on the crossover rate
-            crossoverChromosones(offspring1, offspring2);
+            crossoverchromosomes(offspring1, offspring2);
 
             //now mutate dependent on the mutation rate
-            mutateChromosone(offspring1);
-            mutateChromosone(offspring2);
+            mutatechromosome(offspring1);
+            mutatechromosome(offspring2);
 
             //add these offspring to the new population. (assigning zero as their
             //fitness scores)
-            temp[chromosoneCount++] = offspring1;
-            temp[chromosoneCount++] = offspring2;
+            temp[chromosomeCount++] = offspring1;
+            temp[chromosomeCount++] = offspring2;
 
         }//end loop
 
         //copy temp population into main population array
-        for(int i = 0; i < amountChromosones; i++){
-            chromosone[i] = temp[i];
+        for(int i = 0; i < amountchromosomes; i++){
+            chromosome[i] = temp[i];
         }
 
-        int bestChromosone = 0;
+        int bestchromosome = 0;
 
-        /*for(int i = 0; i < amountChromosones; i++){
-            if(chromosoneFitness[i] > chromosoneFitness[bestChromosone]){
-                bestChromosone = i;
+        /*for(int i = 0; i < amountchromosomes; i++){
+            if(chromosomeFitness[i] > chromosomeFitness[bestchromosome]){
+                bestchromosome = i;
             }
         }
 
-        cout << "\nBest chromosone so far: " << chromosone[bestChromosone] << endl;
-        cout << "With fitness: " << chromosoneFitness[bestChromosone] << endl;*/
+        cout << "\nBest chromosome so far: " << chromosome[bestchromosome] << endl;
+        cout << "With fitness: " << chromosomeFitness[bestchromosome] << endl;*/
 
         generationCount++;
 
@@ -111,40 +111,40 @@ int main(){
     cin.get(); cin.get();
 }
 
-void createChromosones(){
-    for(int x = 0; x < amountChromosones; x++){
-        if(chromosone[x].empty()){
-            for(int y = 0; y < chromosoneLenght; y++){
-                chromosone[x].append(rand()%2 ? "1" : "0");
+void createchromosomes(){
+    for(int x = 0; x < amountchromosomes; x++){
+        if(chromosome[x].empty()){
+            for(int y = 0; y < chromosomeLenght; y++){
+                chromosome[x].append(rand()%2 ? "1" : "0");
             }
         }
     }
 }
 
-void calculateFitness(int chromosoneId){
+void calculateFitness(int chromosomeId){
 
-    string decodedChromosone = decodeChromosone(chromosoneId);
+    string decodedchromosome = decodechromosome(chromosomeId);
 
-    //cout << "Encoded: " << chromosone[chromosoneId] << endl;
+    //cout << "Encoded: " << chromosome[chromosomeId] << endl;
 
-    //cout << "Decoded: " << decodedChromosone << endl;
+    //cout << "Decoded: " << decodedchromosome << endl;
 
     bool noNumbers = true;
 
-    for(int i = 0; i < decodedChromosone.length(); i++){
-        if(isdigit(decodedChromosone[i])){
+    for(int i = 0; i < decodedchromosome.length(); i++){
+        if(isdigit(decodedchromosome[i])){
             noNumbers = false;
         }
     }
 
     if(noNumbers){
-        chromosoneFitness[chromosoneId] = 0;
+        chromosomeFitness[chromosomeId] = 0;
         return;
     }
 
-    for(int i = 0; i < decodedChromosone.length(); i++){
-        if(decodedChromosone[i] == '#'){
-            decodedChromosone.erase(i, 1);
+    for(int i = 0; i < decodedchromosome.length(); i++){
+        if(decodedchromosome[i] == '#'){
+            decodedchromosome.erase(i, 1);
             i = -1;
         }
     }
@@ -154,18 +154,18 @@ void calculateFitness(int chromosoneId){
     string toNumber = "";
     bool afterOperator = false, multiplication = false, addition = false, divisionByZero = false;
 
-    for(int i = 0; i < decodedChromosone.length()+1 && !divisionByZero; i++){
+    for(int i = 0; i < decodedchromosome.length()+1 && !divisionByZero; i++){
         if(!afterOperator){
-            if(isdigit(decodedChromosone[i]) || (decodedChromosone[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedChromosone[i] == '-' && i == start)){
-                toNumber += decodedChromosone[i];
-            }else if((decodedChromosone[i] == '*' || decodedChromosone[i] == '/') && (!toNumber.empty() && toNumber != "-")){
-                multiplication = decodedChromosone[i] == '*' ? true : false;
+            if(isdigit(decodedchromosome[i]) || (decodedchromosome[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedchromosome[i] == '-' && i == start)){
+                toNumber += decodedchromosome[i];
+            }else if((decodedchromosome[i] == '*' || decodedchromosome[i] == '/') && (!toNumber.empty() && toNumber != "-")){
+                multiplication = decodedchromosome[i] == '*' ? true : false;
                 afterOperator = true;
                 secondStart = i+1;
                 a = stod(toNumber.c_str());
                 toNumber = "";
-            }else if((decodedChromosone[i] == '*' || decodedChromosone[i] == '/') && (toNumber.empty() || toNumber == "-")){
-                decodedChromosone.erase(i, 1);
+            }else if((decodedchromosome[i] == '*' || decodedchromosome[i] == '/') && (toNumber.empty() || toNumber == "-")){
+                decodedchromosome.erase(i, 1);
                 i = -1;
                 toNumber = "";
             }else{
@@ -175,19 +175,19 @@ void calculateFitness(int chromosoneId){
                 toNumber = "";
             }
         }else{
-            if(isdigit(decodedChromosone[i]) || decodedChromosone[i] == '.' || (decodedChromosone[i] == '-' && i == secondStart)){
-                toNumber += decodedChromosone[i];
+            if(isdigit(decodedchromosome[i]) || decodedchromosome[i] == '.' || (decodedchromosome[i] == '-' && i == secondStart)){
+                toNumber += decodedchromosome[i];
             }else{
                 if(toNumber.empty()){
-                    decodedChromosone.erase(i-1, 1);
+                    decodedchromosome.erase(i-1, 1);
                 }else if(toNumber == "-"){
-                    decodedChromosone.erase(i-2, 2);
+                    decodedchromosome.erase(i-2, 2);
                 }else{
                     b = stod(toNumber.c_str());
                     if(!multiplication && b == 0){
                         divisionByZero = true;
                     }
-                    decodedChromosone.replace(start, i-start, to_string(multiplication ? a*b : a/b));
+                    decodedchromosome.replace(start, i-start, to_string(multiplication ? a*b : a/b));
                 }
                 toNumber = "";
                 a = 0;
@@ -201,23 +201,23 @@ void calculateFitness(int chromosoneId){
         }
     }
     if(divisionByZero){
-        //cout << "Chromosone tries to divide by zero" << endl;
-        chromosoneFitness[chromosoneId] = 0;
+        //cout << "chromosome tries to divide by zero" << endl;
+        chromosomeFitness[chromosomeId] = 0;
     }else{
         start = 0;
 
-        for(int i = 0; i < decodedChromosone.length()+1; i++){
+        for(int i = 0; i < decodedchromosome.length()+1; i++){
             if(!afterOperator){
-                if(isdigit(decodedChromosone[i]) || (decodedChromosone[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedChromosone[i] == '-' && i == start)){
-                    toNumber += decodedChromosone[i];
-                }else if((decodedChromosone[i] == '+' || decodedChromosone[i] == '-') && !toNumber.empty() && toNumber != "-"){
-                    addition = decodedChromosone[i] == '+' ? true : false;
+                if(isdigit(decodedchromosome[i]) || (decodedchromosome[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedchromosome[i] == '-' && i == start)){
+                    toNumber += decodedchromosome[i];
+                }else if((decodedchromosome[i] == '+' || decodedchromosome[i] == '-') && !toNumber.empty() && toNumber != "-"){
+                    addition = decodedchromosome[i] == '+' ? true : false;
                     afterOperator = true;
                     secondStart = i+1;
                     a = stod(toNumber.c_str());
                     toNumber = "";
-                }else if((decodedChromosone[i] == '+' || decodedChromosone[i] == '-') && (toNumber.empty() || toNumber == "-")){
-                    decodedChromosone.erase(i, 1);
+                }else if((decodedchromosome[i] == '+' || decodedchromosome[i] == '-') && (toNumber.empty() || toNumber == "-")){
+                    decodedchromosome.erase(i, 1);
                     i = -1;
                     toNumber = "";
                 }else{
@@ -227,16 +227,16 @@ void calculateFitness(int chromosoneId){
                     toNumber = "";
                 }
             }else{
-                if(isdigit(decodedChromosone[i]) || decodedChromosone[i] == '.' || (decodedChromosone[i] == '-' && i == secondStart)){
-                    toNumber += decodedChromosone[i];
+                if(isdigit(decodedchromosome[i]) || decodedchromosome[i] == '.' || (decodedchromosome[i] == '-' && i == secondStart)){
+                    toNumber += decodedchromosome[i];
                 }else{
                     if(toNumber.empty()){
-                        decodedChromosone.erase(i-1, 1);
+                        decodedchromosome.erase(i-1, 1);
                     }else if(toNumber == "-"){
-                        decodedChromosone.erase(i-2, 2);
+                        decodedchromosome.erase(i-2, 2);
                     }else{
                         b = stod(toNumber.c_str());
-                        decodedChromosone.replace(start, i-start, to_string(addition ? a+b : a-b));
+                        decodedchromosome.replace(start, i-start, to_string(addition ? a+b : a-b));
                     }
                     toNumber = "";
                     a = 0;
@@ -249,56 +249,56 @@ void calculateFitness(int chromosoneId){
                 }
             }
         }
-        //cout << "Result: " << decodedChromosone << endl;
-        chromosoneFitness[chromosoneId] = (double)1/(fabs(desiredValue-stod(decodedChromosone))+1);
+        //cout << "Result: " << decodedchromosome << endl;
+        chromosomeFitness[chromosomeId] = (double)1/(fabs(desiredValue-stod(decodedchromosome))+1);
     }
-    //cout << "Fitness: " << chromosoneFitness[chromosoneId] << endl << endl;
+    //cout << "Fitness: " << chromosomeFitness[chromosomeId] << endl << endl;
 }
 
-string decodeChromosone(int chromosoneId){
-    string decodedChromosone = "";
+string decodechromosome(int chromosomeId){
+    string decodedchromosome = "";
     for(int i = 0; i < geneLenght; i++){
-        string chromosoneSection = chromosone[chromosoneId].substr(i*4, 4);
-        if(chromosoneSection == "0000"){
-            decodedChromosone += "0";
-        }else if(chromosoneSection == "0001"){
-            decodedChromosone += "1";
-        }else if(chromosoneSection == "0010"){
-            decodedChromosone += "2";
-        }else if(chromosoneSection == "0011"){
-            decodedChromosone += "3";
-        }else if(chromosoneSection == "0100"){
-            decodedChromosone += "4";
-        }else if(chromosoneSection == "0101"){
-            decodedChromosone += "5";
-        }else if(chromosoneSection == "0110"){
-            decodedChromosone += "6";
-        }else if(chromosoneSection == "0111"){
-            decodedChromosone += "7";
-        }else if(chromosoneSection == "1000"){
-            decodedChromosone += "8";
-        }else if(chromosoneSection == "1001"){
-            decodedChromosone += "9";
-        }else if(chromosoneSection == "1010"){
-            decodedChromosone += "+";
-        }else if(chromosoneSection == "1011"){
-            decodedChromosone += "-";
-        }else if(chromosoneSection == "1100"){
-            decodedChromosone += "*";
-        }else if(chromosoneSection == "1101"){
-            decodedChromosone += "/";
+        string chromosomeSection = chromosome[chromosomeId].substr(i*4, 4);
+        if(chromosomeSection == "0000"){
+            decodedchromosome += "0";
+        }else if(chromosomeSection == "0001"){
+            decodedchromosome += "1";
+        }else if(chromosomeSection == "0010"){
+            decodedchromosome += "2";
+        }else if(chromosomeSection == "0011"){
+            decodedchromosome += "3";
+        }else if(chromosomeSection == "0100"){
+            decodedchromosome += "4";
+        }else if(chromosomeSection == "0101"){
+            decodedchromosome += "5";
+        }else if(chromosomeSection == "0110"){
+            decodedchromosome += "6";
+        }else if(chromosomeSection == "0111"){
+            decodedchromosome += "7";
+        }else if(chromosomeSection == "1000"){
+            decodedchromosome += "8";
+        }else if(chromosomeSection == "1001"){
+            decodedchromosome += "9";
+        }else if(chromosomeSection == "1010"){
+            decodedchromosome += "+";
+        }else if(chromosomeSection == "1011"){
+            decodedchromosome += "-";
+        }else if(chromosomeSection == "1100"){
+            decodedchromosome += "*";
+        }else if(chromosomeSection == "1101"){
+            decodedchromosome += "/";
         }else{
-            decodedChromosone += "#";
+            decodedchromosome += "#";
         }
     }
-    return decodedChromosone;
+    return decodedchromosome;
 }
 
-string cleanupChromosone(string decodedChromosone){
+string cleanupchromosome(string decodedchromosome){
 
-    for(int i = 0; i < decodedChromosone.length(); i++){
-        if(decodedChromosone[i] == '#'){
-            decodedChromosone.erase(i, 1);
+    for(int i = 0; i < decodedchromosome.length(); i++){
+        if(decodedchromosome[i] == '#'){
+            decodedchromosome.erase(i, 1);
             i = -1;
         }
     }
@@ -307,16 +307,16 @@ string cleanupChromosone(string decodedChromosone){
     string toNumber = "";
     bool afterOperator = false;
 
-    for(int i = 0; i < decodedChromosone.length()+1; i++){
+    for(int i = 0; i < decodedchromosome.length()+1; i++){
         if(!afterOperator){
-            if(isdigit(decodedChromosone[i]) || (decodedChromosone[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedChromosone[i] == '-' && i == start)){
-                toNumber += decodedChromosone[i];
-            }else if((decodedChromosone[i] == '*' || decodedChromosone[i] == '/') && (!toNumber.empty() && toNumber != "-")){
+            if(isdigit(decodedchromosome[i]) || (decodedchromosome[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedchromosome[i] == '-' && i == start)){
+                toNumber += decodedchromosome[i];
+            }else if((decodedchromosome[i] == '*' || decodedchromosome[i] == '/') && (!toNumber.empty() && toNumber != "-")){
                 afterOperator = true;
                 secondStart = i+1;
                 toNumber = "";
-            }else if((decodedChromosone[i] == '*' || decodedChromosone[i] == '/') && (toNumber.empty() || toNumber == "-")){
-                decodedChromosone.erase(i, 1);
+            }else if((decodedchromosome[i] == '*' || decodedchromosome[i] == '/') && (toNumber.empty() || toNumber == "-")){
+                decodedchromosome.erase(i, 1);
                 i = -1;
                 toNumber = "";
             }else{
@@ -324,14 +324,14 @@ string cleanupChromosone(string decodedChromosone){
                 toNumber = "";
             }
         }else{
-            if(isdigit(decodedChromosone[i]) || decodedChromosone[i] == '.' || (decodedChromosone[i] == '-' && i == secondStart)){
-                toNumber += decodedChromosone[i];
+            if(isdigit(decodedchromosome[i]) || decodedchromosome[i] == '.' || (decodedchromosome[i] == '-' && i == secondStart)){
+                toNumber += decodedchromosome[i];
             }else{
                 if(toNumber.empty()){
-                    decodedChromosone.erase(i-1, 1);
+                    decodedchromosome.erase(i-1, 1);
                     i = -1;
                 }else if(toNumber == "-"){
-                    decodedChromosone.erase(i-2, 2);
+                    decodedchromosome.erase(i-2, 2);
                     i = -1;
                 }
                 toNumber = "";
@@ -345,16 +345,16 @@ string cleanupChromosone(string decodedChromosone){
 
     start = 0;
 
-    for(int i = 0; i < decodedChromosone.length()+1; i++){
+    for(int i = 0; i < decodedchromosome.length()+1; i++){
         if(!afterOperator){
-            if(isdigit(decodedChromosone[i]) || (decodedChromosone[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedChromosone[i] == '-' && i == start)){
-                toNumber += decodedChromosone[i];
-            }else if((decodedChromosone[i] == '+' || decodedChromosone[i] == '-') && (!toNumber.empty() && toNumber != "-")){
+            if(isdigit(decodedchromosome[i]) || (decodedchromosome[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedchromosome[i] == '-' && i == start)){
+                toNumber += decodedchromosome[i];
+            }else if((decodedchromosome[i] == '+' || decodedchromosome[i] == '-') && (!toNumber.empty() && toNumber != "-")){
                 afterOperator = true;
                 secondStart = i+1;
                 toNumber = "";
-            }else if((decodedChromosone[i] == '+' || decodedChromosone[i] == '-') && (toNumber.empty() || toNumber == "-")){
-                decodedChromosone.erase(i, 1);
+            }else if((decodedchromosome[i] == '+' || decodedchromosome[i] == '-') && (toNumber.empty() || toNumber == "-")){
+                decodedchromosome.erase(i, 1);
                 i = -1;
                 toNumber = "";
             }else{
@@ -362,14 +362,14 @@ string cleanupChromosone(string decodedChromosone){
                 toNumber = "";
             }
         }else{
-            if(isdigit(decodedChromosone[i]) || decodedChromosone[i] == '.' || (decodedChromosone[i] == '-' && i == secondStart)){
-                toNumber += decodedChromosone[i];
+            if(isdigit(decodedchromosome[i]) || decodedchromosome[i] == '.' || (decodedchromosome[i] == '-' && i == secondStart)){
+                toNumber += decodedchromosome[i];
             }else{
                 if(toNumber.empty()){
-                    decodedChromosone.erase(i-1, 1);
+                    decodedchromosome.erase(i-1, 1);
                     i = -1;
                 }else if(toNumber == "-"){
-                    decodedChromosone.erase(i-2, 2);
+                    decodedchromosome.erase(i-2, 2);
                     i = -1;
                 }
                 toNumber = "";
@@ -380,46 +380,46 @@ string cleanupChromosone(string decodedChromosone){
         }
     }
 
-    return decodedChromosone;
+    return decodedchromosome;
 }
 
-string rouletteChromosone(double totalFitness){
+string roulettechromosome(double totalFitness){
 	//generate a random number between 0 & total fitness count
 	double slice = (double)(RANDOM_NUM * totalFitness);
-	//go through the chromosones adding up the fitness so far
+	//go through the chromosomes adding up the fitness so far
 	double fitnessSoFar = 0.0;
 
-	for(int i = 0; i < amountChromosones; i++){
-		fitnessSoFar += chromosoneFitness[i];
+	for(int i = 0; i < amountchromosomes; i++){
+		fitnessSoFar += chromosomeFitness[i];
 
 		//if the fitness so far > random number return the chromo at this point
 		if(fitnessSoFar >= slice)
 
-			return chromosone[i];
+			return chromosome[i];
 	}
 
 	return "";
 }
 
-void crossoverChromosones(string &offspring1, string &offspring2){
+void crossoverchromosomes(string &offspring1, string &offspring2){
       if(RANDOM_NUM < crossoverRate){
         //create a random crossover point
-        int crossover = RANDOM_NUM * chromosoneLenght;
+        int crossover = RANDOM_NUM * chromosomeLenght;
 
-        string t1 = offspring1.substr(0, crossover) + offspring2.substr(crossover, chromosoneLenght);
-        string t2 = offspring2.substr(0, crossover) + offspring1.substr(crossover, chromosoneLenght);
+        string t1 = offspring1.substr(0, crossover) + offspring2.substr(crossover, chromosomeLenght);
+        string t2 = offspring2.substr(0, crossover) + offspring1.substr(crossover, chromosomeLenght);
 
         offspring1 = t1; offspring2 = t2;
       }
 }
 
-void mutateChromosone(string &chromosone){
-    for(int i = 0; i < chromosoneLenght; i++){
+void mutatechromosome(string &chromosome){
+    for(int i = 0; i < chromosomeLenght; i++){
         if (RANDOM_NUM < mutationRate){
-            if(chromosone[i] == '1'){
-				chromosone[i] = '0';
+            if(chromosome[i] == '1'){
+				chromosome[i] = '0';
 			}else{
-				chromosone[i] = '1';
+				chromosome[i] = '1';
 			}
 		}
 	}
