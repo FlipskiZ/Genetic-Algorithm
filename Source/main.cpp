@@ -20,7 +20,7 @@ double desiredValue;                            //The desired result
 double crossoverRate = 0.7;                     //The chance that the chromosomes will exchange bits
 double mutationRate = 0.005;                    //The chance that a random bit gets flipped (1->0 or 0->1)
 int geneLenght = 9;                             //The amount of genes. Should be an odd number
-int chromosomeLenght;                           //The total chromosome lenght
+int chromosomeLenght;                           //The total chromosome length
 int amountChromosomes = 32;                     //The amount of chromosomes. Should be even number
 int showGeneration = 1000;                      //The amount of generations to pass before showing the best chromosome
 
@@ -113,7 +113,7 @@ int main(){
             string decoded = decodeChromosome(i);
             cout << "Decoded: " << decoded << endl;
             cout << "Cleaned: " << cleanupChromosome(decoded) << endl;
-            cout << "Answer: " << calculateAnswer(decoded) << endl;
+            cout << i <<"Answer: " << calculateAnswer(decoded) << endl;
 
             done = true;
             break;
@@ -193,7 +193,17 @@ void calculateFitness(int chromosomeId){
         return;
     }
 
-    chromosomeFitness.at(chromosomeId) = 1/(1+(fabs(desiredValue-stod(decodedChromosome)))); //Gives a fitness in between 0 and 1
+    double fitness = stod(decodedChromosome);
+
+    fitness -= (double)desiredValue;
+
+    fitness = (double)fabs(fitness);
+
+    fitness += (double)1;
+
+    fitness = (double)1/fitness;
+    cout << chromosomeId << ": " << fitness << endl;
+    chromosomeFitness.at(chromosomeId) = fitness; //Gives a fitness value between 0 and 1
 
     //cout << "Fitness: " << chromosomeFitness[chromosomeId] << endl << endl;
 }
