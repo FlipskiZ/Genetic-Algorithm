@@ -15,6 +15,7 @@ vector<string> chromosome;                      //9 sections of 4 bits each - ea
 vector<double> chromosomeFitness;               //The fitness of the chromosomes
 
 int generationCount = 0;
+int bestChromosome = 0;
 
 double desiredValue;                            //The desired result
 double crossoverRate = 0.7;                     //The chance that the chromosomes will exchange bits
@@ -25,7 +26,7 @@ int amountChromosomes = 32;                     //The amount of chromosomes. Sho
 int showGeneration = 1000;                      //The amount of generations to pass before showing the best chromosome
 
 void createChromosomes();                                               //Create new chromosomes if needed
-#pragma optimize("", off)                                               //Fixes a bug in where the compiler optimizes an assignment resulting in displaying the wrong best chromosome
+//#pragma optimize("", off)                                               //Fixes a bug in where the compiler optimizes an assignment resulting in displaying the wrong best chromosome
 void calculateFitness(int chromosomeId);                                //Calculate the fitness score of the chromosome
 string decodeChromosome(int chromosomeId);                              //Decode the chromosome into the expression
 string cleanupChromosome(string decodedChromosome);                     //Cleanup the chromosome expression. Uses mostly the same code as the expression parser, just without adding the numbers together.
@@ -86,7 +87,7 @@ int main(){
     chromosome.resize(amountChromosomes);
     chromosomeFitness.resize(amountChromosomes);
 
-    cout << "Every how many generations do you want to see the best chromosome?, enter for \n default which is 1000" << endl;
+    cout << "Please input every how many generations the best chromosome is shown, enter for default which is 1000" << endl;
     getline(cin, temp);
     if(temp.empty()){
         showGeneration = 1000;
@@ -106,25 +107,39 @@ int main(){
             totalFitness += chromosomeFitness[i];
         }
 
-        for(int i = 0; i < amountChromosomes; i++){
+        for(int i = 0; i < amountChromosomes; i++){ //Checks if a solution is found
             if(chromosomeFitness[i] == 1){
             cout << "\nSolution found in " << generationCount << " generations!" << endl << endl;
             cout << "Chromosome: " << chromosome[i] << endl;
             string decoded = decodeChromosome(i);
             cout << "Decoded: " << decoded << endl;
             cout << "Cleaned: " << cleanupChromosome(decoded) << endl;
-            cout << i <<"Answer: " << calculateAnswer(decoded) << endl;
+            cout << "Answer: " << calculateAnswer(decoded) << endl;
 
             done = true;
             break;
             }
         }
 
+        if(generationCount % showGeneration == 0){ //Show the generations best chromosone
+            bestChromosome = 0;
+
+            for(int i = 0; i < amountChromosomes; i++){
+                if(chromosomeFitness[i] > chromosomeFitness[bestChromosome]){
+                    bestChromosome = i;
+                }
+            }
+            cout << "\nBest chromosome so far: " << chromosome[bestChromosome] << endl;
+            cout << "Decoded: " << cleanupChromosome(decodeChromosome(bestChromosome)) << endl;
+            cout << "Answer: " << calculateAnswer(decodeChromosome(bestChromosome)) << endl;
+            cout << "With fitness: " << chromosomeFitness[bestChromosome] << endl;
+        }
+
         //define some temporary storage for the new population we are about to create
         string temp[amountChromosomes];
         int chromosomeCount = 0;
         //loop until we have created POP_SIZE new chromosomes
-        while (chromosomeCount < amountChromosomes){
+        while(chromosomeCount < amountChromosomes){
             // we are going to create the new population by grabbing members of the old population
             // two at a time via roulette wheel selection.
             string offspring1 = rouletteChromosome(totalFitness);
@@ -147,21 +162,6 @@ int main(){
         //copy temp population into main population array
         for(int i = 0; i < amountChromosomes; i++){
             chromosome[i] = temp[i];
-        }
-
-        if(generationCount % showGeneration == 0){
-            int bestChromosome = 0;
-
-            for(int i = 0; i < amountChromosomes; i++){
-                if(chromosomeFitness[i] > chromosomeFitness[bestChromosome]){
-                    bestChromosome = i;
-                }
-            }
-
-            cout << "\nBest chromosome so far: " << chromosome[bestChromosome] << endl;
-            cout << "Decoded: " << cleanupChromosome(decodeChromosome(bestChromosome)) << endl;
-            cout << "Answer: " << calculateAnswer(decodeChromosome(bestChromosome)) << endl;
-            cout << bestChromosome << "With fitness: " << chromosomeFitness[bestChromosome] << endl;
         }
 
         generationCount++;
@@ -202,7 +202,7 @@ void calculateFitness(int chromosomeId){
     fitness += (double)1;
 
     fitness = (double)1/fitness;
-    cout << chromosomeId << ": " << fitness << endl;
+
     chromosomeFitness.at(chromosomeId) = fitness; //Gives a fitness value between 0 and 1
 
     //cout << "Fitness: " << chromosomeFitness[chromosomeId] << endl << endl;
@@ -331,6 +331,12 @@ string cleanupChromosome(string decodedChromosome){
                 secondStart = 0;
             }
         }
+    }
+
+    int temp = decodedChromosome.length()-1;
+
+    if(decodedChromosome[temp] == '+' || decodedChromosome[temp] == '-' || decodedChromosome[temp] == '*' || decodedChromosome[temp] == '/'){
+        decodedChromosome.erase(temp);
     }
 
     return decodedChromosome;
