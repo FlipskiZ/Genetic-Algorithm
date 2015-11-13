@@ -5,14 +5,14 @@
 #include <time.h>
 #include <sstream>
 #include <math.h>
+#include <vector>
 
 #define RANDOM_NUM  ((double)rand()/(RAND_MAX+1))
 
 using namespace std;
 
-const int amountChromosomes = 32;               //The amount of chromosomes. Should be even number
-string chromosome[amountChromosomes];           //9 sections of 4 bits each - each section is a number or operator
-double chromosomeFitness[amountChromosomes];    //The fitness of the chromosomes
+vector<string> chromosome;                      //9 sections of 4 bits each - each section is a number or operator
+vector<double> chromosomeFitness;               //The fitness of the chromosomes
 
 int generationCount = 0;
 
@@ -21,11 +21,15 @@ double crossoverRate = 0.7;                     //The chance that the chromosome
 double mutationRate = 0.005;                    //The chance that a random bit gets flipped (1->0 or 0->1)
 int geneLenght = 9;                             //The amount of genes. Should be an odd number
 int chromosomeLenght;                           //The total chromosome lenght
+int amountChromosomes = 32;                     //The amount of chromosomes. Should be even number
+int showGeneration = 1000;                      //The amount of generations to pass before showing the best chromosome
 
 void createChromosomes();                                               //Create new chromosomes if needed
+#pragma optimize("", off)                                               //Fixes a bug in where the compiler optimizes an assignment resulting in displaying the wrong best chromosome
 void calculateFitness(int chromosomeId);                                //Calculate the fitness score of the chromosome
 string decodeChromosome(int chromosomeId);                              //Decode the chromosome into the expression
 string cleanupChromosome(string decodedChromosome);                     //Cleanup the chromosome expression. Uses mostly the same code as the expression parser, just without adding the numbers together.
+string calculateAnswer(string decodedChromosome);                       //Calculate the answer of the chromosome
 string rouletteChromosome(double totalFitness);                         //Select chromosomes to go through to the next generation. chromosomes that are not selected are empty
 void crossoverChromosomes(string &chromosomeId1, string &chromosomeId2);//Chance for some chromosomes to swap bits with other chromosomes
 void mutateChromosome(string &chromosome);                              //Chance to mutate some bits in a chromosome
@@ -47,7 +51,7 @@ int main(){
         desiredValue = stod(temp);
     }
 
-    cout << "Please input a crossover rate, enter for default ehich is 0.7" << endl;
+    cout << "Please input a crossover rate, enter for the default which is 0.7" << endl;
     getline(cin, temp);
     if(temp.empty()){
         crossoverRate = 0.7;
@@ -55,7 +59,7 @@ int main(){
         crossoverRate = stod(temp);
     }
 
-    cout << "Please input a mutation rate, enter for default ehich is 0.005" << endl;
+    cout << "Please input a mutation rate, enter for the default which is 0.005" << endl;
     getline(cin, temp);
     if(temp.empty()){
         mutationRate = 0.005;
@@ -63,7 +67,7 @@ int main(){
         mutationRate = stod(temp);
     }
 
-    cout << "Please input the gene lenght, enter for default ehich is 9" << endl;
+    cout << "Please input the gene length, enter for the default which is 9" << endl;
     getline(cin, temp);
     if(temp.empty()){
         geneLenght = 9;
@@ -71,11 +75,26 @@ int main(){
         geneLenght = stod(temp);
     }
 
-    chromosomeLenght = geneLenght*4;
+    cout << "Please input the size of the population, enter for the default which is 32" << endl;
+    getline(cin, temp);
+    if(temp.empty()){
+        amountChromosomes = 32;
+    }else{
+        amountChromosomes = stod(temp);
+    }
 
-double crossoverRate = 0.7;                     //The chance that the chromosomes will exchange bits
-double mutationRate = 0.005;                    //The chance that a random bit gets flipped (1->0 or 0->1)
-int geneLenght = 9;                             //The amount of genes. Should be an odd number
+    chromosome.resize(amountChromosomes);
+    chromosomeFitness.resize(amountChromosomes);
+
+    cout << "Every how many generations do you want to see the best chromosome?, enter for \n default which is 1000" << endl;
+    getline(cin, temp);
+    if(temp.empty()){
+        showGeneration = 1000;
+    }else{
+        showGeneration = stod(temp);
+    }
+
+    chromosomeLenght = geneLenght*4;
 
     createChromosomes();
 
@@ -94,6 +113,7 @@ int geneLenght = 9;                             //The amount of genes. Should be
             string decoded = decodeChromosome(i);
             cout << "Decoded: " << decoded << endl;
             cout << "Cleaned: " << cleanupChromosome(decoded) << endl;
+            cout << "Answer: " << calculateAnswer(decoded) << endl;
 
             done = true;
             break;
@@ -129,18 +149,19 @@ int geneLenght = 9;                             //The amount of genes. Should be
             chromosome[i] = temp[i];
         }
 
-        if(generationCount % 1000 == 0){
-            int bestchromosome = 0;
+        if(generationCount % showGeneration == 0){
+            int bestChromosome = 0;
 
             for(int i = 0; i < amountChromosomes; i++){
-                if(chromosomeFitness[i] > chromosomeFitness[bestchromosome]){
-                    bestchromosome = i;
+                if(chromosomeFitness[i] > chromosomeFitness[bestChromosome]){
+                    bestChromosome = i;
                 }
             }
 
-            cout << "\nBest chromosome so far: " << chromosome[bestchromosome] << endl;
-            cout << "Decoded: " << cleanupChromosome(decodeChromosome(bestchromosome)) << endl;
-            cout << "With fitness: " << chromosomeFitness[bestchromosome] << endl;
+            cout << "\nBest chromosome so far: " << chromosome[bestChromosome] << endl;
+            cout << "Decoded: " << cleanupChromosome(decodeChromosome(bestChromosome)) << endl;
+            cout << "Answer: " << calculateAnswer(decodeChromosome(bestChromosome)) << endl;
+            cout << bestChromosome << "With fitness: " << chromosomeFitness[bestChromosome] << endl;
         }
 
         generationCount++;
@@ -148,7 +169,7 @@ int geneLenght = 9;                             //The amount of genes. Should be
         //cin.get();
     }
     cout << "Press enter to continue..." << endl;
-    cin.get(); cin.get();
+    cin.get();
 }
 
 void createChromosomes(){
@@ -165,133 +186,15 @@ void calculateFitness(int chromosomeId){
 
     string decodedChromosome = decodeChromosome(chromosomeId);
 
-    //cout << "Encoded: " << chromosome[chromosomeId] << endl;
+    decodedChromosome = calculateAnswer(decodedChromosome);
 
-    //cout << "Decoded: " << decodedChromosome << endl;
-
-    bool noNumbers = true;
-
-    for(int i = 0; i < decodedChromosome.length(); i++){
-        if(isdigit(decodedChromosome[i])){
-            noNumbers = false;
-        }
-    }
-
-    if(noNumbers){
-        chromosomeFitness[chromosomeId] = 0;
+    if(decodedChromosome == "NaN"){
+        chromosomeFitness.at(chromosomeId) = 0;
         return;
     }
 
-    for(int i = 0; i < decodedChromosome.length(); i++){
-        if(decodedChromosome[i] == '#'){
-            decodedChromosome.erase(i, 1);
-            i = -1;
-        }
-    }
+    chromosomeFitness.at(chromosomeId) = 1/(1+(fabs(desiredValue-stod(decodedChromosome)))); //Gives a fitness in between 0 and 1
 
-    double a = 0, b = 0;
-    int start = 0, secondStart = 0;
-    string toNumber = "";
-    bool afterOperator = false, multiplication = false, addition = false, divisionByZero = false;
-
-    for(int i = 0; i < decodedChromosome.length()+1 && !divisionByZero; i++){
-        if(!afterOperator){
-            if(isdigit(decodedChromosome[i]) || (decodedChromosome[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedChromosome[i] == '-' && i == start)){
-                toNumber += decodedChromosome[i];
-            }else if((decodedChromosome[i] == '*' || decodedChromosome[i] == '/') && (!toNumber.empty() && toNumber != "-")){
-                multiplication = decodedChromosome[i] == '*' ? true : false;
-                afterOperator = true;
-                secondStart = i+1;
-                a = stod(toNumber.c_str());
-                toNumber = "";
-            }else if((decodedChromosome[i] == '*' || decodedChromosome[i] == '/') && (toNumber.empty() || toNumber == "-")){
-                decodedChromosome.erase(i, 1);
-                i = -1;
-                toNumber = "";
-            }else{
-                start = i+1;
-                a = 0;
-                b = 0;
-                toNumber = "";
-            }
-        }else{
-            if(isdigit(decodedChromosome[i]) || decodedChromosome[i] == '.' || (decodedChromosome[i] == '-' && i == secondStart)){
-                toNumber += decodedChromosome[i];
-            }else{
-                if(toNumber.empty()){
-                    decodedChromosome.erase(i-1, 1);
-                }else if(toNumber == "-"){
-                    decodedChromosome.erase(i-2, 2);
-                }else{
-                    b = stod(toNumber.c_str());
-                    if(!multiplication && b == 0){
-                        divisionByZero = true;
-                    }
-                    decodedChromosome.replace(start, i-start, to_string(multiplication ? a*b : a/b));
-                }
-                toNumber = "";
-                a = 0;
-                b = 0;
-                multiplication = false;
-                afterOperator = false;
-                start = 0;
-                secondStart = 0;
-                i = -1;
-            }
-        }
-    }
-    if(divisionByZero){
-        //cout << "chromosome tries to divide by zero" << endl;
-        chromosomeFitness[chromosomeId] = 0;
-    }else{
-        start = 0;
-
-        for(int i = 0; i < decodedChromosome.length()+1; i++){
-            if(!afterOperator){
-                if(isdigit(decodedChromosome[i]) || (decodedChromosome[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedChromosome[i] == '-' && i == start)){
-                    toNumber += decodedChromosome[i];
-                }else if((decodedChromosome[i] == '+' || decodedChromosome[i] == '-') && !toNumber.empty() && toNumber != "-"){
-                    addition = decodedChromosome[i] == '+' ? true : false;
-                    afterOperator = true;
-                    secondStart = i+1;
-                    a = stod(toNumber.c_str());
-                    toNumber = "";
-                }else if((decodedChromosome[i] == '+' || decodedChromosome[i] == '-') && (toNumber.empty() || toNumber == "-")){
-                    decodedChromosome.erase(i, 1);
-                    i = -1;
-                    toNumber = "";
-                }else{
-                    start = i+1;
-                    a = 0;
-                    b = 0;
-                    toNumber = "";
-                }
-            }else{
-                if(isdigit(decodedChromosome[i]) || decodedChromosome[i] == '.' || (decodedChromosome[i] == '-' && i == secondStart)){
-                    toNumber += decodedChromosome[i];
-                }else{
-                    if(toNumber.empty()){
-                        decodedChromosome.erase(i-1, 1);
-                    }else if(toNumber == "-"){
-                        decodedChromosome.erase(i-2, 2);
-                    }else{
-                        b = stod(toNumber.c_str());
-                        decodedChromosome.replace(start, i-start, to_string(addition ? a+b : a-b));
-                    }
-                    toNumber = "";
-                    a = 0;
-                    b = 0;
-                    addition = false;
-                    afterOperator = false;
-                    start = 0;
-                    secondStart = 0;
-                    i = -1;
-                }
-            }
-        }
-        //cout << "Result: " << decodedChromosome << endl;
-        chromosomeFitness[chromosomeId] = (double)1/(fabs(desiredValue-stod(decodedChromosome))+1);
-    }
     //cout << "Fitness: " << chromosomeFitness[chromosomeId] << endl << endl;
 }
 
@@ -420,6 +323,131 @@ string cleanupChromosome(string decodedChromosome){
         }
     }
 
+    return decodedChromosome;
+}
+
+string calculateAnswer(string decodedChromosome){
+    cleanupChromosome(decodedChromosome);
+
+    bool noNumbers = true;
+
+    for(int i = 0; i < decodedChromosome.length(); i++){
+        if(isdigit(decodedChromosome[i])){
+            noNumbers = false;
+        }
+    }
+
+    if(noNumbers){
+        return "NaN";
+    }
+
+    for(int i = 0; i < decodedChromosome.length(); i++){
+        if(decodedChromosome[i] == '#'){
+            decodedChromosome.erase(i, 1);
+            i = -1;
+        }
+    }
+
+    double a = 0, b = 0;
+    int start = 0, secondStart = 0;
+    string toNumber = "";
+    bool afterOperator = false, multiplication = false, addition = false, divisionByZero = false;
+
+    for(int i = 0; i < decodedChromosome.length()+1 && !divisionByZero; i++){
+        if(!afterOperator){
+            if(isdigit(decodedChromosome[i]) || (decodedChromosome[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedChromosome[i] == '-' && i == start)){
+                toNumber += decodedChromosome[i];
+            }else if((decodedChromosome[i] == '*' || decodedChromosome[i] == '/') && (!toNumber.empty() && toNumber != "-")){
+                multiplication = decodedChromosome[i] == '*' ? true : false;
+                afterOperator = true;
+                secondStart = i+1;
+                a = stod(toNumber.c_str());
+                toNumber = "";
+            }else if((decodedChromosome[i] == '*' || decodedChromosome[i] == '/') && (toNumber.empty() || toNumber == "-")){
+                decodedChromosome.erase(i, 1);
+                i = -1;
+                toNumber = "";
+            }else{
+                start = i+1;
+                a = 0;
+                b = 0;
+                toNumber = "";
+            }
+        }else{
+            if(isdigit(decodedChromosome[i]) || decodedChromosome[i] == '.' || (decodedChromosome[i] == '-' && i == secondStart)){
+                toNumber += decodedChromosome[i];
+            }else{
+                if(toNumber.empty()){
+                    decodedChromosome.erase(i-1, 1);
+                }else if(toNumber == "-"){
+                    decodedChromosome.erase(i-2, 2);
+                }else{
+                    b = stod(toNumber.c_str());
+                    if(!multiplication && b == 0){
+                        divisionByZero = true;
+                    }
+                    decodedChromosome.replace(start, i-start, to_string(multiplication ? a*b : a/b));
+                }
+                toNumber = "";
+                a = 0;
+                b = 0;
+                multiplication = false;
+                afterOperator = false;
+                start = 0;
+                secondStart = 0;
+                i = -1;
+            }
+        }
+    }
+    if(divisionByZero){
+        return "NaN";
+    }else{
+        start = 0;
+
+        for(int i = 0; i < decodedChromosome.length()+1; i++){
+            if(!afterOperator){
+                if(isdigit(decodedChromosome[i]) || (decodedChromosome[i] == '.' && toNumber.length() > 0 && toNumber != "-") || (decodedChromosome[i] == '-' && i == start)){
+                    toNumber += decodedChromosome[i];
+                }else if((decodedChromosome[i] == '+' || decodedChromosome[i] == '-') && !toNumber.empty() && toNumber != "-"){
+                    addition = decodedChromosome[i] == '+' ? true : false;
+                    afterOperator = true;
+                    secondStart = i+1;
+                    a = stod(toNumber.c_str());
+                    toNumber = "";
+                }else if((decodedChromosome[i] == '+' || decodedChromosome[i] == '-') && (toNumber.empty() || toNumber == "-")){
+                    decodedChromosome.erase(i, 1);
+                    i = -1;
+                    toNumber = "";
+                }else{
+                    start = i+1;
+                    a = 0;
+                    b = 0;
+                    toNumber = "";
+                }
+            }else{
+                if(isdigit(decodedChromosome[i]) || decodedChromosome[i] == '.' || (decodedChromosome[i] == '-' && i == secondStart)){
+                    toNumber += decodedChromosome[i];
+                }else{
+                    if(toNumber.empty()){
+                        decodedChromosome.erase(i-1, 1);
+                    }else if(toNumber == "-"){
+                        decodedChromosome.erase(i-2, 2);
+                    }else{
+                        b = stod(toNumber.c_str());
+                        decodedChromosome.replace(start, i-start, to_string(addition ? a+b : a-b));
+                    }
+                    toNumber = "";
+                    a = 0;
+                    b = 0;
+                    addition = false;
+                    afterOperator = false;
+                    start = 0;
+                    secondStart = 0;
+                    i = -1;
+                }
+            }
+        }
+    }
     return decodedChromosome;
 }
 
