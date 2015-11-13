@@ -6,6 +6,7 @@
 #include <sstream>
 #include <math.h>
 #include <vector>
+#include <fstream>
 
 #define RANDOM_NUM  ((double)rand()/(RAND_MAX+1))
 
@@ -43,6 +44,10 @@ int main(){
     double totalFitness = 0;
 
     string temp = "";
+
+    ofstream GAInfo ("GAInfo.txt");
+
+    GAInfo << "Generation" << "|" << "Best Fitness" << "|" << "Average Fitness" << endl;
 
     cout << "Please input a desired number to solve" << endl;
     getline(cin, temp);
@@ -87,7 +92,7 @@ int main(){
     chromosome.resize(amountChromosomes);
     chromosomeFitness.resize(amountChromosomes);
 
-    cout << "Please input every how many generations the best chromosome is shown, enter for default which is 1000" << endl;
+    cout << "Please input every how many generations the best chromosome is shown and written to file\nEnter for the default which is 1000" << endl;
     getline(cin, temp);
     if(temp.empty()){
         showGeneration = 1000;
@@ -115,6 +120,9 @@ int main(){
             cout << "Decoded: " << decoded << endl;
             cout << "Cleaned: " << cleanupChromosome(decoded) << endl;
             cout << "Answer: " << calculateAnswer(decoded) << endl;
+            cout << "Average Fitness: " << totalFitness/amountChromosomes << endl;
+
+            GAInfo << generationCount << "|" << "1" << "|" << totalFitness/amountChromosomes << endl;
 
             done = true;
             break;
@@ -133,6 +141,11 @@ int main(){
             cout << "Decoded: " << cleanupChromosome(decodeChromosome(bestChromosome)) << endl;
             cout << "Answer: " << calculateAnswer(decodeChromosome(bestChromosome)) << endl;
             cout << "With fitness: " << chromosomeFitness[bestChromosome] << endl;
+            cout << "Average fitness: " << totalFitness/amountChromosomes << endl;
+
+            if(chromosomeFitness[bestChromosome] != 1){
+                GAInfo << generationCount << "|" << chromosomeFitness[bestChromosome] << "|" << totalFitness/amountChromosomes << endl;
+            }
         }
 
         //define some temporary storage for the new population we are about to create
@@ -168,6 +181,7 @@ int main(){
 
         //cin.get();
     }
+    GAInfo.close();
     cout << "Press enter to continue..." << endl;
     cin.get();
 }
